@@ -26,8 +26,7 @@ public class CustomerServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         Car soldCar = carService.buyCar(req.getParameter("brand"), req.getParameter("model"), req.getParameter("licensePlate"));
-        dailyReportService.updateDailyReport(soldCar.getPrice());
-        carService.sellCar(soldCar);
+        dailyReportService.updateDailyReport(soldCar);
         Gson gson = new Gson();
         String json = gson.toJson(soldCar);
         resp.getWriter().write(json);

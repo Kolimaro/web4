@@ -4,6 +4,7 @@ import model.Car;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 import util.DBHelper;
 
 import java.util.List;
@@ -18,25 +19,24 @@ public class CarDao {
 
     public List<Car> getAllCar() {
         Session session = sessionFactory.openSession();
-        List<Car> carList = session.createQuery("From Car").list();
+        Query<Car> query = session.createQuery("SELECT c FROM Car c", Car.class);
+        List<Car> carList = query.getResultList();
         session.close();
         return carList;
     }
 
     public Car buyCar(String brand, String model, String licensePlate) {
         Session session = sessionFactory.openSession();
-        List<Car> carList = session.createQuery("From Car").list();
+        Query<Car> query = session.createQuery("SELECT c FROM Car c WHERE (c.brand = :car_brand AND c.model = :car_model AND c.licensePlate = :car_licensePlate)", Car.class);
+        query.setParameter("car_brand", brand);
+        query.setParameter("car_model", model);
+        query.setParameter("car_licensePlate", licensePlate);
+        Car car = query.getSingleResult();
         session.close();
-        Car car = null;
-        for (Car x : carList) {
-            if (x.getBrand().equals(brand) && x.getModel().equals(model) && x.getLicensePlate().equals(licensePlate)) {
-                car = x;
-            }
-        }
         return car;
     }
 
-    public void sellCar(Car car) {
+    public void deleteCar(Car car) {
         Session session = sessionFactory.openSession();
         Transaction transaction = session.beginTransaction();
         session.delete(car);
@@ -54,11 +54,8 @@ public class CarDao {
 
     public void clearCarList() {
         Session session = sessionFactory.openSession();
-        List<Car> carList = session.createQuery("From Car").list();
         Transaction transaction = session.beginTransaction();
-        for (Car x : carList) {
-            session.delete(x);
-        }
+        session.createQuery("DELETE FROM Car").executeUpdate();
         transaction.commit();
         session.close();
     }

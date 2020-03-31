@@ -4,6 +4,7 @@ import model.DailyReport;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
+import org.hibernate.query.Query;
 import util.DBHelper;
 
 import java.util.List;
@@ -11,7 +12,6 @@ import java.util.List;
 public class DailyReportDao {
 
     private SessionFactory sessionFactory;
-    private static boolean isTablesReset = true;
 
     public DailyReportDao() {
         this.sessionFactory = DBHelper.getSessionFactory();
@@ -19,28 +19,22 @@ public class DailyReportDao {
 
     public List<DailyReport> getAllDailyReport() {
         Session session = sessionFactory.openSession();
-        List<DailyReport> dailyReportList = session.createQuery("From DailyReport").list();
+        Query<DailyReport> query = session.createQuery("SELECT dr FROM DailyReport dr", DailyReport.class);
+        List<DailyReport> dailyReportList = query.getResultList();
         session.close();
         return dailyReportList;
     }
 
-    public void updateDailyReport(Long price) {
-        if (isTablesReset) {
-            addNewReport();
-            isTablesReset = false;
-        }
-        DailyReport lastDailyReport = getAllDailyReport().get(getAllDailyReport().size() - 1);
+    public void updateDailyReport(DailyReport dailyReport) {
         Session session = sessionFactory.openSession();
         Transaction transaction = session.beginTransaction();
-        lastDailyReport.setEarnings(lastDailyReport.getEarnings() + price);
-        lastDailyReport.setSoldCars(lastDailyReport.getSoldCars() + 1);
-        session.update(lastDailyReport);
+        session.update(dailyReport);
         transaction.commit();
         session.close();
     }
 
-    public void addNewReport() {
-        DailyReport report = new DailyReport(0L, 0L);
+    public void addNewReport(Long price, Long count) {
+        DailyReport report = new DailyReport(price, count);
         Session session = sessionFactory.openSession();
         Transaction transaction = session.beginTransaction();
         session.save(report);
@@ -49,18 +43,30 @@ public class DailyReportDao {
     }
 
     public DailyReport getLastReport() {
-        List<DailyReport> list = getAllDailyReport();
-        return list.get(list.size() - 2);
+        Session session = sessionFactory.openSession();
+        Query<Long> query = session.createQuery("SELECT MAX (dr.id) FROM DailyReport dr", Long.class);
+        Long maxId = query.getSingleResult();
+        if (maxId == null) {
+            return null;
+        }
+        DailyReport dailyReport = session.get(DailyReport.class, maxId);
+        session.close();
+        return dailyReport;
+    }
+
+    public DailyReport getYesterdayReport() {
+        Session session = sessionFactory.openSession();
+        Query<Long> query = session.createQuery("SELECT MAX (dr.id) FROM DailyReport dr", Long.class);
+        Long maxId = query.getSingleResult();
+        DailyReport dailyReport = session.get(DailyReport.class, maxId - 1);
+        session.close();
+        return dailyReport;
     }
 
     public void clearDailyReports() {
-        isTablesReset = true;
         Session session = sessionFactory.openSession();
-        List<DailyReport> list = session.createQuery("From DailyReport").list();
         Transaction transaction = session.beginTransaction();
-        for (DailyReport x : list) {
-            session.delete(x);
-        }
+        session.createQuery("DELETE FROM DailyReport").executeUpdate();
         transaction.commit();
         session.close();
     }

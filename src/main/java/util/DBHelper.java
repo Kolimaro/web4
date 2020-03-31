@@ -17,7 +17,7 @@ public class DBHelper {
             Configuration configuration = new Configuration();
             configuration.addAnnotatedClass(Car.class);
             configuration.addAnnotatedClass(DailyReport.class);
-            configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQLDialect");
+            configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.MySQL8Dialect");
             configuration.setProperty("hibernate.connection.driver_class", "com.mysql.cj.jdbc.Driver");
             configuration.setProperty("hibernate.connection.url", "jdbc:mysql://localhost:3306/testdb");
             configuration.setProperty("hibernate.connection.username", "root");

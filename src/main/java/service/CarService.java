@@ -18,11 +18,9 @@ public class CarService {
     }
 
     public Car buyCar(String brand, String model, String licensePlate) {
-        return carDao.buyCar(brand, model, licensePlate);
-    }
-
-    public void sellCar(Car car) {
-        carDao.sellCar(car);
+        Car car = carDao.buyCar(brand, model, licensePlate);
+        carDao.deleteCar(car);
+        return car;
     }
 
     public boolean addCar(Car car) {
@@ -41,6 +39,4 @@ public class CarService {
     public void clearCarList() {
         carDao.clearCarList();
     }
-
-
 }
